@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: healthchecker-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: healthchecker-app
+  template:
+    metadata:
+      labels:
+        app: healthchecker-app
+    spec:
+      containers:
+        - name: healthchecker
+          image: healthchecker:v0.4
+          ports:
+            - name: web
+              containerPort: 8000
+          env:
+            - name: HEALTHCHECKER_PORT
+              value: "8000"
