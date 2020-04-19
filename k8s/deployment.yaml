@@ -14,10 +14,23 @@ spec:
     spec:
       containers:
         - name: healthchecker
-          image: healthchecker:v0.4
+          image: healthchecker:release-0.4
           ports:
             - name: web
               containerPort: 8000
           env:
             - name: HEALTHCHECKER_PORT
               value: "8000"
+          livenessProbe:
+            httpGet:
+              port: web
+              path: /
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              port: web
+              path: /health
+            initialDelaySeconds: 10
+            periodSeconds: 5

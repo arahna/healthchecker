@@ -8,16 +8,20 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 const defaultPort = "8080"
 
 func main() {
+	time.Sleep(7 * time.Second)
+
 	log.SetOutput(os.Stdout)
 	log.SetFormatter(&log.JSONFormatter{})
 
 	router := mux.NewRouter()
 	router.HandleFunc("/health", healthHandler).Methods(http.MethodGet)
+	router.HandleFunc("/version", versionHandler).Methods(http.MethodGet)
 	router.HandleFunc("/", helloHandler).Methods(http.MethodGet)
 
 	serverPort := envString("HEALTHCHECKER_PORT", defaultPort)
@@ -41,6 +45,12 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write([]byte("{\"status\": \"OK\"}")); err != nil {
+		log.WithField("err", err).Error("write response error")
+	}
+}
+
+func versionHandler(w http.ResponseWriter, r *http.Request) {
+	if _, err := w.Write([]byte("{\"version\": \"0.4\"}")); err != nil {
 		log.WithField("err", err).Error("write response error")
 	}
 }
