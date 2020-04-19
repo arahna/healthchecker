@@ -19,7 +19,8 @@ func main() {
 
 func startServer(serverUrl string) *http.Server {
 	router := mux.NewRouter()
-	router.HandleFunc("/health/", healthHandler).Methods(http.MethodGet)
+	router.HandleFunc("/health", healthHandler).Methods(http.MethodGet)
+	router.HandleFunc("/", helloHandler).Methods(http.MethodGet)
 
 	srv := &http.Server{Addr: serverUrl, Handler: router}
 
@@ -35,6 +36,12 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write([]byte("{\"status\": \"OK\"}")); err != nil {
+		log.WithField("err", err).Error("write response error")
+	}
+}
+
+func helloHandler(w http.ResponseWriter, r *http.Request) {
+	if _, err := w.Write([]byte("Hello from " + os.Getenv("HOSTNAME"))); err != nil {
 		log.WithField("err", err).Error("write response error")
 	}
 }
