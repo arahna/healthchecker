@@ -10,22 +10,27 @@ import (
 	"syscall"
 )
 
+const defaultPort = "8080"
+
 func main() {
 	log.SetOutput(os.Stdout)
 	log.SetFormatter(&log.JSONFormatter{})
-	srv := startServer(":8000")
-	waitForShutdown(srv)
-}
 
-func startServer(serverUrl string) *http.Server {
 	router := mux.NewRouter()
 	router.HandleFunc("/health", healthHandler).Methods(http.MethodGet)
 	router.HandleFunc("/", helloHandler).Methods(http.MethodGet)
 
-	srv := &http.Server{Addr: serverUrl, Handler: router}
+	serverPort := envString("HEALTHCHECKER_PORT", defaultPort)
+	srv := startServer(serverPort, router)
+	waitForShutdown(srv)
+}
+
+func startServer(serverPort string, router *mux.Router) *http.Server {
+	serverAddr := ":" + serverPort
+	srv := &http.Server{Addr: serverAddr, Handler: router}
 
 	go func() {
-		log.WithFields(log.Fields{"url": serverUrl}).Info("starting the server")
+		log.WithFields(log.Fields{"url": serverAddr}).Info("starting the server")
 		log.Fatal(srv.ListenAndServe())
 	}()
 
@@ -53,4 +58,12 @@ func waitForShutdown(srv *http.Server) {
 	<-killSignalChan
 	srv.Shutdown(context.Background())
 	log.Info("Shutting down")
+}
+
+func envString(env, fallback string) string {
+	e := os.Getenv(env)
+	if e == "" {
+		return fallback
+	}
+	return e
 }
